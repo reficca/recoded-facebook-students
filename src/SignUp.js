@@ -1,48 +1,50 @@
-import React from "react";
+import React, { useState } from "react";
+import firebase from "firebase"
 import db from "./firebase";
-import GoogleBtn from './GoogleButton';
+//import Button from "react-bootstrap/Button";
+// import Form from "react-bootstrap/Form"
+// import FormGroup from "react-bootstrap/FormGroup";
+// import FormControl from "react-bootstrap/FormControl";
 
 
 const SignUpPage = () => {
 
-  const loginGoogle = (e) => {
+  const [user, setUser] = useState(firebase.auth().currentUser);
+  const [profile, setProfile] = useState("");
+  const [city, setCity] = useState("");
+
+  const googleLogin = () => {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    firebase.auth()
+      .signInWithPopup(provider)
+      .then(function(result) {
+        const user = result.user;
+        setUser(user);
+    }).catch((error) => console.error("error here", error))
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    return (
-      console.log("google auth")
-    );
-  };
-
-  const cityForm = () => {
-    return (
-      console.log("firebase add")
-    );
-  };
-
-  const profileForm = () => {
-    return (
-      console.log("firebase add")
-    );
-  };
-
-  const submitButton = (e) => {
-    e.preventDefault();
-    return (
-      console.log("Submitted successfully.")
-    );
-  };
+    await db.collection("profiles").doc(user.uid).set({
+      userId: user.uid,
+      name: user.displayName,
+      profile: profile,
+      city: city,
+      imageUrl: user.photoURL,
+    })
+      .then(() => console.log("success"))
+      .catch((error) => console.error("error here", error))
+    };
 
   // 
 
   return (
-    <div>
-      <form>
-        <GoogleBtn />
-        <button onClick={loginGoogle} variant="primary">google</button>{' '}
-        <input onSubmit={cityForm} placeholder="city"></input>{' '}
-        <input onSubmit={profileForm} placeholder="profile"></input>{' '}
-        <button onClick={submitButton} variant="primary">Submit</button>
+      <form onSubmit={handleSubmit}> 
+        <img src="./google-signin.png" alt="google-signin" onClick={googleLogin}/>
+        <input type="text" placeholder="Profile" onChange={(e) => setProfile(e.target.value)}/>
+        <input type="text" placeholder="City" onChange={(e) => setCity(e.target.value)}/>
+        <button variant="primary" type="submit">Submit</button>
       </form>
-    </div>
   )
 };
 
